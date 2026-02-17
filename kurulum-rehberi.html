@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marfom M³ - Kurulum Rehberi</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            color: white;
+        }
+        .header .logo {
+            width: 80px; height: 80px;
+            background: white;
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 40px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 14px;
+            opacity: 0.85;
+            line-height: 1.5;
+        }
+
+        /* Tab Selector */
+        .tab-selector {
+            display: flex;
+            background: rgba(255,255,255,0.15);
+            border-radius: 14px;
+            padding: 4px;
+            margin: 20px 0;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 14px 8px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .tab-btn.active {
+            background: white;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .tab-btn .icon { font-size: 20px; }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        /* Steps */
+        .step {
+            display: flex;
+            gap: 16px;
+            padding: 20px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .step:last-child { border-bottom: none; }
+        
+        .step-number {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+        .step-content {
+            flex: 1;
+        }
+        .step-content h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .step-content p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Visual Mock - Phone Screen */
+        .visual {
+            background: #f8f8f8;
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 12px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .visual .mock-bar {
+            background: #e0e0e0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #888;
+        }
+        .visual .mock-url {
+            background: #f5f5f5;
+            border-radius: 6px;
+            padding: 6px 10px;
+            flex: 1;
+            text-align: left;
+            font-size: 11px;
+            color: #555;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        /* Highlight box */
+        .highlight-box {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border: 2px solid #ff9800;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .highlight-box .emoji { font-size: 28px; }
+        .highlight-box .text {
+            font-size: 13px;
+            color: #e65100;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        /* Animated Arrow */
+        .arrow-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ff5722;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin: 8px 0;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Icon Buttons Mock */
+        .mock-menu {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 8px;
+            margin-top: 10px;
+            text-align: left;
+        }
+        .mock-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #333;
+        }
+        .mock-menu-item.highlighted {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border: 2px solid #2196f3;
+            font-weight: 700;
+            color: #1565c0;
+        }
+        .mock-menu-item .mi { font-size: 20px; }
+
+        /* Browser icons mock */
+        .browser-bar-icons {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mock-icon {
+            width: 28px; height: 28px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+        }
+        .mock-icon.highlight {
+            background: #2196f3;
+            color: white;
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 10px rgba(33,150,243,0.4);
+        }
+
+        /* Section panels */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* Share button mock */
+        .share-icon-safari {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px; height: 36px;
+            background: #007aff;
+            color: white;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+
+        /* 3 dots */
+        .three-dots {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px; height: 36px;
+            background: #333;
+            color: white;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        /* Done section */
+        .done-section {
+            text-align: center;
+            padding: 24px;
+        }
+        .done-emoji { font-size: 56px; margin-bottom: 12px; }
+        .done-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .done-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Tip */
+        .tip-box {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-radius: 14px;
+            padding: 18px;
+            margin-top: 16px;
+            text-align: center;
+        }
+        .tip-box .tip-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2e7d32;
+            margin-bottom: 6px;
+        }
+        .tip-box .tip-text {
+            font-size: 13px;
+            color: #388e3c;
+            line-height: 1.5;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
+        }
+
+        /* Phone Frame */
+        .phone-frame {
+            background: #1a1a1a;
+            border-radius: 24px;
+            padding: 8px;
+            max-width: 220px;
+            margin: 12px auto;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .phone-screen {
+            background: white;
+            border-radius: 18px;
+            overflow: hidden;
+            padding: 10px;
+        }
+        .phone-statusbar {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 8px 8px;
+            font-size: 10px;
+            color: #333;
+            font-weight: 600;
+        }
+        .home-screen-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 10px 4px;
+        }
+        .app-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            margin: 0 auto;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+        .app-label {
+            font-size: 9px;
+            text-align: center;
+            margin-top: 4px;
+            color: #333;
+        }
+        .app-icon.marfom {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            box-shadow: 0 2px 8px rgba(37,99,235,0.4);
+            animation: pulse 2s infinite;
+        }
+
+        /* CTA Button */
+        .cta-button {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(37,99,235,0.4);
+            transition: transform 0.2s;
+        }
+        .cta-button:active { transform: scale(0.97); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🧽</div>
+            <h1>Marfom M³ Hesaplama</h1>
+            <p>Uygulamayı ana ekranınıza ekleyin,<br>her zaman tek tıkla erişin!</p>
+        </div>
+
+        <!-- Tab Selector -->
+        <div class="tab-selector">
+            <button class="tab-btn active" onclick="switchTab('android')">
+                <span class="icon">🤖</span> Android
+            </button>
+            <button class="tab-btn" onclick="switchTab('iphone')">
+                <span class="icon">🍎</span> iPhone
+            </button>
+        </div>
+
+        <!-- ============ ANDROID PANEL ============ -->
+        <div class="panel active" id="panel-android">
+            
+            <!-- Step 1 -->
+            <div class="card">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Linki Chrome'da Açın</h3>
+                        <p>Size gönderilen linke tıklayın. Link <b>Chrome tarayıcısında</b> açılacaktır.</p>
+                        <div class="visual">
+                            <div class="mock-bar">
+                                <div style="font-size:18px;">🔒</div>
+                                <div class="mock-url">marfomsnger-m3hesaplama.netlify.app</div>
+                                <div class="browser-bar-icons">
+                                    <div class="mock-icon">⭐</div>
+                                    <div class="mock-icon highlight">⋮</div>
+                                </div>
+                            </div>
+                            <div class="arrow-indicator">👆 Sağ üstteki 3 noktaya tıklayın</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="card">
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>"Ana ekrana ekle" seçin</h3>
+                        <p>Açılan menüde aşağı kaydırıp <b>"Ana ekrana ekle"</b> seçeneğini bulun ve tıklayın.</p>
+                        <div class="visual">
+                            <div class="mock-menu">
+                                <div class="mock-menu-item">
+                                    <span class="mi">⭐</span> Yer işaretlerine ekle
+                                </div>
+                                <div class="mock-menu-item">
+                                    <span class="mi">📥</span> İndir
+                                </div>
+                                <div class="mock-menu-item highlighted">
+                                    <span class="mi">📱</span> Ana ekrana ekle
+                                </div>
+                                <div class="mock-menu-item">
+                                    <span class="mi">🖥️</span> Masaüstü site
+                                </div>
+                            </div>
+                            <div class="arrow-indicator">👆 Bunu seçin!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="card">
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>"Ekle" butonuna tıklayın</h3>
+                        <p>Açılan pencerede uygulama adını göreceksiniz. <b>"Ekle"</b> butonuna tıklayın.</p>
+                        <div class="highlight-box">
+                            <span class="emoji">✅</span>
+                            <span class="text">"Ekle" veya "Yükle" butonuna basmanız yeterli!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4 - Done -->
+            <div class="card">
+                <div class="done-section">
+                    <div class="done-emoji">🎉</div>
+                    <div class="done-title">Tamamlandı!</div>
+                    <div class="done-desc">Artık Marfom M³ uygulaması ana ekranınızda. Tek tıkla açabilirsiniz!</div>
+                    
+                    <div class="phone-frame">
+                        <div class="phone-screen">
+                            <div class="phone-statusbar">
+                                <span>12:23</span>
+                                <span>📶 🔋</span>
+                            </div>
+                            <div class="home-screen-grid">
+                                <div>
+                                    <div class="app-icon" style="background:#25D366;">💬</div>
+                                    <div class="app-label">WhatsApp</div>
+                                </div>
+                                <div>
+                                    <div class="app-icon" style="background:#4285f4;">📷</div>
+                                    <div class="app-label">Kamera</div>
+                                </div>
+                                <div>
+                                    <div class="app-icon" style="background:#ea4335;">📧</div>
+                                    <div class="app-label">Gmail</div>
+                                </div>
+                                <div>
+                                    <div class="app-icon marfom">🧽</div>
+                                    <div class="app-label"><b>Marfom M³</b></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ iPHONE PANEL ============ -->
+        <div class="panel" id="panel-iphone">
+            
+            <!-- Step 1 -->
+            <div class="card">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Linki Safari'de Açın</h3>
+                        <p>Size gönderilen linke tıklayın. Link <b>Safari tarayıcısında</b> açılmalıdır.</p>
+                        <div class="highlight-box">
+                            <span class="emoji">⚠️</span>
+                            <span class="text">Chrome değil, <b>Safari</b> ile açmanız gerekiyor! Sadece Safari'de "Ana Ekrana Ekle" seçeneği vardır.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="card">
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Paylaş butonuna tıklayın</h3>
+                        <p>Ekranın <b>alt ortasında</b> (veya üst sağda) bulunan paylaş butonuna <span class="share-icon-safari">↑</span> tıklayın.</p>
+                        <div class="visual">
+                            <div class="mock-bar">
+                                <div style="font-size:14px;">◀</div>
+                                <div class="mock-url">marfomsnger-m3hesaplama.netlify.app</div>
+                                <div class="browser-bar-icons">
+                                    <div class="mock-icon highlight" style="background:#007aff;">↑</div>
+                                </div>
+                            </div>
+                            <div class="arrow-indicator">👆 Bu butona tıklayın</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="card">
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>"Ana Ekrana Ekle" seçin</h3>
+                        <p>Açılan menüde aşağı kaydırıp <b>"Ana Ekrana Ekle"</b> seçeneğini bulun.</p>
+                        <div class="visual">
+                            <div class="mock-menu">
+                                <div class="mock-menu-item">
+                                    <span class="mi">📋</span> Kopyala
+                                </div>
+                                <div class="mock-menu-item">
+                                    <span class="mi">🔖</span> Yer İmi Ekle
+                                </div>
+                                <div class="mock-menu-item">
+                                    <span class="mi">📚</span> Okuma Listesine Ekle
+                                </div>
+                                <div class="mock-menu-item highlighted">
+                                    <span class="mi">➕</span> Ana Ekrana Ekle
+                                </div>
+                            </div>
+                            <div class="arrow-indicator">👆 Bunu seçin!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="card">
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>"Ekle" butonuna tıklayın</h3>
+                        <p>Sağ üst köşedeki <b>"Ekle"</b> butonuna tıklayın.</p>
+                        <div class="highlight-box">
+                            <span class="emoji">✅</span>
+                            <span class="text">Sağ üstteki "Ekle" yazısına basmanız yeterli!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5 - Done -->
+            <div class="card">
+                <div class="done-section">
+                    <div class="done-emoji">🎉</div>
+                    <div class="done-title">Tamamlandı!</div>
+                    <div class="done-desc">Artık Marfom M³ uygulaması ana ekranınızda. Tek tıkla açabilirsiniz!</div>
+                    
+                    <div class="phone-frame">
+                        <div class="phone-screen">
+                            <div class="phone-statusbar">
+                                <span>12:23</span>
+                                <span>📶 🔋</span>
+                            </div>
+                            <div class="home-screen-grid">
+                                <div>
+                                    <div class="app-icon" style="background:#25D366;">💬</div>
+                                    <div class="app-label">WhatsApp</div>
+                                </div>
+                                <div>
+                                    <div class="app-icon" style="background:#007aff;">📷</div>
+                                    <div class="app-label">Kamera</div>
+                                </div>
+                                <div>
+                                    <div class="app-icon" style="background:#ea4335;">📧</div>
+                                    <div class="app-label">Mail</div>
+                                </div>
+                                <div>
+                                    <div class="app-icon marfom">🧽</div>
+                                    <div class="app-label"><b>Marfom M³</b></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tip -->
+        <div class="tip-box">
+            <div class="tip-title">💡 İpucu</div>
+            <div class="tip-text">Uygulama internet olmadan da çalışır! Bir kez açtıktan sonra uçak modunda bile kullanabilirsiniz.</div>
+        </div>
+
+        <!-- CTA -->
+        <a href="https://marfomsnger-m3hesaplama.netlify.app" class="cta-button">
+            🧽 Uygulamayı Aç
+        </a>
+
+        <!-- Footer -->
+        <div class="footer">
+            Marfom Sünger © 2026
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            // Paneller
+            document.getElementById('panel-android').classList.toggle('active', tab === 'android');
+            document.getElementById('panel-iphone').classList.toggle('active', tab === 'iphone');
+            
+            // Tab butonları
+            document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', 
+                    (tab === 'android' && i === 0) || (tab === 'iphone' && i === 1)
+                );
+            });
+        }
+    </script>
+</body>
+</html>
