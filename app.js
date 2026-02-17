@@ -3424,9 +3424,10 @@ function exportContainerPDF(dims, result) {
 <title> </title>
 <style>
     @page { margin: 0; size: A4; }
+    html, body { margin: 0 !important; padding: 0 !important; width: 100%; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; font-size: 11pt; line-height: 1.5; padding: 0; }
-    .pdf-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding: 16px 24px; border-radius: 10px; background: #2563eb; color: white; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; font-size: 11pt; line-height: 1.5; }
+    .pdf-header { display: flex; align-items: center; gap: 16px; margin: 0; padding: 16px 24px; border-radius: 0; background: #2563eb; color: white; }
     .pdf-header .pdf-logo { height: 50px; width: auto; }
     .pdf-header .pdf-divider { width: 2px; height: 50px; background: rgba(255,255,255,0.4); border-radius: 1px; }
     .pdf-header .pdf-title-block { flex: 1; }
@@ -3435,6 +3436,7 @@ function exportContainerPDF(dims, result) {
     .pdf-header .pdf-title-block p { font-size: 10pt; color: rgba(255,255,255,0.85); margin-top: 2px; }
     .pdf-header .pdf-meta { text-align: right; font-size: 9pt; color: rgba(255,255,255,0.8); white-space: nowrap; }
     .pdf-header .pdf-meta .container-info { font-size: 10pt; color: white; font-weight: 600; margin-top: 4px; }
+    .pdf-content { padding: 16px 20px 0; }
     .section { margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; }
     .section h2 { font-size: 13pt; color: #2563eb; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1.5px solid #e2e8f0; }
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid; }
@@ -3466,7 +3468,7 @@ function exportContainerPDF(dims, result) {
     .top-layout .report-side .stat-box .label { font-size: 8pt; }
     .top-layout .report-side .stat-box .value { font-size: 11pt; }
     .top-layout .report-side h2 { font-size: 11pt; margin-bottom: 6px; }
-    @media print { body { padding: 0; } .no-print { display: none !important; } .disclaimer { position: fixed; bottom: 0; left: 0; right: 0; } }
+    @media print { html, body { margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none !important; } .disclaimer { position: fixed; bottom: 0; left: 0; right: 0; } }
 </style>
 </head>
 <body>
@@ -3483,6 +3485,7 @@ function exportContainerPDF(dims, result) {
         </div>
     </div>
 
+    <div class="pdf-content">
     <div class="top-layout">
         ${canvasDataURL ? `<div class="canvas-wrap"><img src="${canvasDataURL}" alt="3D"></div>` : ''}
         <div class="report-side">
@@ -3541,6 +3544,7 @@ function exportContainerPDF(dims, result) {
         </table>
     </div>
 
+    </div>
     <div class="disclaimer">${t('containerDisclaimer')}</div>
 
     <script>window.onload=function(){window.print();}<\/script>
