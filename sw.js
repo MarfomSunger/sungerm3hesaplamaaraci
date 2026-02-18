@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sunger-hesap-v12';
+const CACHE_NAME = 'sunger-hesap-v20';
 const urlsToCache = [
     './',
     './index.html',

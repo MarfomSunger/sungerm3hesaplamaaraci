@@ -1997,7 +1997,7 @@ function addToList() {
             urunToplamM3 = urunBirimM3 * toplamUrunSayisi;
         }
 
-        const toplamAdet = paketAdet + toplamUrunSayisi;
+        const toplamAdet = toplamUrunSayisi > 0 ? toplamUrunSayisi : paketAdet;
 
         let dimsText = t('rollpackDims', { en: en, cap: cap, paket: paketAdet });
         if (urunToplamM3 > 0) {
@@ -2536,6 +2536,21 @@ const CONTAINER_TYPES = {
 };
 
 let selectedContainerType = '20dc';
+let rollpackYatayMod = false;
+
+// Konteyner 3D renk paleti (global — hem 3D hem raporda kullanılır)
+const CONTAINER_ITEM_COLORS = [
+    { top: '#fde68a', left: '#f59e0b', right: '#d97706', front: '#eab308', bottom: '#b45309' },
+    { top: '#a5f3fc', left: '#22d3ee', right: '#0891b2', front: '#06b6d4', bottom: '#0e7490' },
+    { top: '#c4b5fd', left: '#8b5cf6', right: '#6d28d9', front: '#7c3aed', bottom: '#5b21b6' },
+    { top: '#fca5a5', left: '#ef4444', right: '#b91c1c', front: '#dc2626', bottom: '#991b1b' },
+    { top: '#86efac', left: '#22c55e', right: '#15803d', front: '#16a34a', bottom: '#166534' },
+    { top: '#fdba74', left: '#f97316', right: '#c2410c', front: '#ea580c', bottom: '#9a3412' },
+    { top: '#f9a8d4', left: '#ec4899', right: '#be185d', front: '#db2777', bottom: '#9d174d' },
+    { top: '#93c5fd', left: '#3b82f6', right: '#1d4ed8', front: '#2563eb', bottom: '#1e40af' },
+    { top: '#fef08a', left: '#eab308', right: '#a16207', front: '#ca8a04', bottom: '#854d0e' },
+    { top: '#d9f99d', left: '#84cc16', right: '#4d7c0f', front: '#65a30d', bottom: '#3f6212' },
+];
 let containerResult = null;
 let lastContainerDims = null;
 
@@ -2591,6 +2606,17 @@ function setupContainer() {
     });
 
     btnCalc.addEventListener('click', calculateContainer);
+
+    // Rollpack yatay dizilim toggle
+    const btnYatay = document.getElementById('btn-rollpack-yatay');
+    const orientBadge = document.getElementById('orient-badge');
+    if (btnYatay) {
+        btnYatay.addEventListener('click', () => {
+            rollpackYatayMod = !rollpackYatayMod;
+            btnYatay.classList.toggle('active', rollpackYatayMod);
+            orientBadge.textContent = rollpackYatayMod ? 'Aktif' : 'Kapalı';
+        });
+    }
 }
 
 function getContainerDims() {
@@ -2621,18 +2647,21 @@ function calculateContainer() {
     const allItems = [];
     itemList.forEach(item => {
         if (item.tip === 'rollpack') {
-            // Rollpack: paketAdet kadar rulo ekle (adet alanı burada kullanılmaz
-            // çünkü adet = paketAdet + ürünSayısı olarak hesaplanmış)
+            // Rollpack: paketAdet kadar rulo ekle
+            // hacimM3 = tüp hacmi + içindeki ürün hacmi (her tüp için)
             const cap = Math.round(item.cap);
-            for (let p = 0; p < (item.paketAdet || 1); p++) {
+            const paketSayisi = item.paketAdet || 1;
+            const urunVolPerTube = paketSayisi > 0 ? ((item.urunToplamM3 || 0) / paketSayisi) : 0;
+            for (let p = 0; p < paketSayisi; p++) {
                 allItems.push({
                     tip: 'rulo',
                     en: Math.round(item.en),
                     boy: cap,
                     kalinlik: cap,
-                    hacimM3: item.birimM3,
-                    label: `RP:${item.en}×Ø${cap.toFixed(0)}`,
-                    sourceId: item.id
+                    hacimM3: item.birimM3 + urunVolPerTube,
+                    label: `RP:${item.en}×Ø${cap.toFixed(0)}-${item.id}`,
+                    sourceId: item.id,
+                    forceYatay: rollpackYatayMod
                 });
             }
             return; // sonraki item'a geç
@@ -2645,7 +2674,7 @@ function calculateContainer() {
                     boy: item.boy,
                     kalinlik: item.kalinlik,
                     hacimM3: item.birimM3,
-                    label: `P:${item.en}×${item.boy}×${item.kalinlik}`,
+                    label: `P:${item.en}×${item.boy}×${item.kalinlik}-${item.id}`,
                     sourceId: item.id
                 });
             } else {
@@ -2661,7 +2690,7 @@ function calculateContainer() {
                     boy: cap,
                     kalinlik: cap,
                     hacimM3: item.birimM3,
-                    label: `R:${item.en}×Ø${cap.toFixed(0)}`,
+                    label: `R:${item.en}×Ø${cap.toFixed(0)}-${item.id}`,
                     sourceId: item.id
                 });
             }
@@ -2916,9 +2945,10 @@ function binPackItems(container, items) {
         return bestFit;
     }
 
-    // AŞ.1: Tüm ruloları DİKEY yerleştir
+    // AŞ.1: Tüm ruloları DİKEY yerleştir (forceYatay olanlar direkt AŞ.2'ye)
     const dikFailedRulos = [];
     for (const item of sortedRulos) {
+        if (item.forceYatay) { dikFailedRulos.push(item); continue; }
         const cap = Math.round(item.boy);
         const cylH = Math.round(item.en);
         if (cap <= 0 || cylH <= 0) { notPlaced.push(item); continue; }
@@ -3127,12 +3157,21 @@ function binPackItems(container, items) {
     const placedVolM3 = placed.reduce((s, p) => s + p.hacimM3, 0);
     const fillPercent = containerVolM3 > 0 ? (placedBBoxVolM3 / containerVolM3) * 100 : 0;
 
+    // sourceId → colorIdx haritası (her item için yerleşen ilk parçanın rengi)
+    const sourceColorMap = {};
+    placed.forEach(p => {
+        if (p.sourceId != null && !(p.sourceId in sourceColorMap)) {
+            sourceColorMap[p.sourceId] = p.colorIdx;
+        }
+    });
+
     return {
         container: { l: CL, w: CW, h: CH, volM3: containerVolM3 },
         placed,
         notPlaced,
         layers,
         colorMap,
+        sourceColorMap,
         totalItems: items.length,
         placedCount: placed.length,
         notPlacedCount: notPlaced.length,
@@ -3166,6 +3205,33 @@ function renderContainerReport(dims, result) {
     const placedPlakaCount = result.placed.filter(p => p.tip === 'plaka').length;
     const totalRuloCount = result.totalItems - placedPlakaCount - (result.notPlaced.filter(p => p.tip === 'plaka').length || 0);
     const totalPlakaCount = result.totalItems - totalRuloCount;
+
+    // Renk efsanesi (sourceColorMap'ten)
+    let legendEl = document.getElementById('report-color-legend');
+    if (!legendEl) {
+        legendEl = document.createElement('div');
+        legendEl.id = 'report-color-legend';
+        legendEl.className = 'report-color-legend';
+        grid.parentNode.insertBefore(legendEl, grid);
+    }
+    if (result.sourceColorMap && Object.keys(result.sourceColorMap).length > 0) {
+        let legendHTML = '<div class="legend-title">🎨 Renk Göstergesi</div><div class="legend-items">';
+        itemList.forEach(it => {
+            const cIdx = result.sourceColorMap[it.id];
+            if (cIdx === undefined) return;
+            const color = CONTAINER_ITEM_COLORS[cIdx % CONTAINER_ITEM_COLORS.length];
+            const tipLabel = it.tip === 'plaka' ? t('tipPlaka') : it.tip === 'rollpack' ? t('tipRollpack') : t('tipRulo');
+            legendHTML += `<div class="legend-row">
+                <span class="legend-dot" style="background:${color.front};border:2px solid ${color.right};"></span>
+                <span class="legend-text"><b>${tipLabel}</b> · ${it.dims}</span>
+            </div>`;
+        });
+        legendHTML += '</div>';
+        legendEl.innerHTML = legendHTML;
+        legendEl.style.display = '';
+    } else {
+        legendEl.style.display = 'none';
+    }
 
     grid.innerHTML = `
         <div class="report-item">
@@ -3399,12 +3465,16 @@ function exportContainerPDF(dims, result) {
 
     // Ürün listesi tablosu
     let productRows = '';
+    const sourceColorMapPDF = result.sourceColorMap || {};
     itemList.forEach((it, idx) => {
         const tipLabel = it.tip === 'plaka' ? t('tipPlaka') : it.tip === 'rollpack' ? t('tipRollpack') : t('tipRulo');
         const adet = it.tip === 'rollpack' ? (it.paketAdet || 1) : (it.adet || 1);
+        const cIdx = sourceColorMapPDF[it.id];
+        const swatchColor = cIdx !== undefined ? CONTAINER_ITEM_COLORS[cIdx % CONTAINER_ITEM_COLORS.length].front : '#cbd5e1';
+        const borderColor = cIdx !== undefined ? CONTAINER_ITEM_COLORS[cIdx % CONTAINER_ITEM_COLORS.length].right : '#94a3b8';
         productRows += `<tr>
             <td>${idx + 1}</td>
-            <td>${tipLabel}</td>
+            <td><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:${swatchColor};border:1.5px solid ${borderColor};vertical-align:middle;margin-right:6px;"></span>${tipLabel}</td>
             <td>${it.dims}</td>
             <td>${adet}</td>
             <td>${formatVolume(it.toplamM3)} m³</td>
@@ -3413,7 +3483,7 @@ function exportContainerPDF(dims, result) {
 
     const typeName = selectedContainerType === 'custom' ? t('containerCustom') : (CONTAINER_TYPES[selectedContainerType] ? CONTAINER_TYPES[selectedContainerType].name : '');
     const now = new Date();
-    const dateStr = now.toLocaleDateString(currentLang === 'tr' ? 'tr-TR' : currentLang === 'de' ? 'de-DE' : currentLang === 'es' ? 'es-ES' : 'en-US', {
+    const dateStr = now.toLocaleDateString(currentLang === 'tr' ? 'tr-TR' : currentLang === 'de' ? 'de-DE' : currentLang === 'es' ? 'es-ES' : currentLang === 'sq' ? 'sq-AL' : 'en-US', {
         year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
 
@@ -3747,19 +3817,8 @@ function renderContainer3D(dims, result) {
         return r.x + r.z + y * 0.8;
     }
 
-    // Renk paleti (ölçü başına bir renk)
-    const COLORS = [
-        { top: '#fde68a', left: '#f59e0b', right: '#d97706', front: '#eab308', bottom: '#b45309' },
-        { top: '#a5f3fc', left: '#22d3ee', right: '#0891b2', front: '#06b6d4', bottom: '#0e7490' },
-        { top: '#c4b5fd', left: '#8b5cf6', right: '#6d28d9', front: '#7c3aed', bottom: '#5b21b6' },
-        { top: '#fca5a5', left: '#ef4444', right: '#b91c1c', front: '#dc2626', bottom: '#991b1b' },
-        { top: '#86efac', left: '#22c55e', right: '#15803d', front: '#16a34a', bottom: '#166534' },
-        { top: '#fdba74', left: '#f97316', right: '#c2410c', front: '#ea580c', bottom: '#9a3412' },
-        { top: '#f9a8d4', left: '#ec4899', right: '#be185d', front: '#db2777', bottom: '#9d174d' },
-        { top: '#93c5fd', left: '#3b82f6', right: '#1d4ed8', front: '#2563eb', bottom: '#1e40af' },
-        { top: '#fef08a', left: '#eab308', right: '#a16207', front: '#ca8a04', bottom: '#854d0e' },
-        { top: '#d9f99d', left: '#84cc16', right: '#4d7c0f', front: '#65a30d', bottom: '#3f6212' },
-    ];
+    // Renk paleti (global CONTAINER_ITEM_COLORS kullanılır)
+    const COLORS = CONTAINER_ITEM_COLORS;
 
 
     // Ekran üzerinde (2D) bir poligonun saat yönünde (CW) veya tersi (CCW) olduğunu bulur.
@@ -4394,8 +4453,8 @@ const translations = {
         containerSummary: '{type} · {placed}/{total} ürün · %{pct} dolu',
         containerVol: 'Konteyner Hacmi',
         containerCoveredVol: 'Kaplanan Hacim',
-        containerProductVol: 'Ürün Hacmi',
-        containerPlacedItems: 'Yerleşen Ürün',
+        containerProductVol: 'Paketlenen Ürün Hacmi',
+        containerPlacedItems: 'Yerleşen Paket',
         containerRuloPlaka: 'Rulo / Plaka',
         containerFillRate: 'Doluluk Oranı',
         containerEmptySpace: '📦 Konteynerde Boş Kalan Alan',
@@ -4790,6 +4849,126 @@ const translations = {
         pdfVolume: 'Volumen',
         pdfType: 'Tipo',
         pdfContainerDims: 'Medidas del Contenedor',
+    },
+    sq: {
+        headerTitle: 'Llogaritës M³',
+        headerSubtitle: 'Mjeti i Vëllimit të Sfungjerit',
+        tabPlaka: 'Pllakë',
+        tabRulo: 'Rulo',
+        tabRollpack: 'Rollpack',
+        plakaTitle: 'Përmasat e Sfungjerit Pllakë',
+        ruloTitle: 'Përmasat e Sfungjerit Rulo',
+        rollpackTitle: 'Përmasat e Rollpack',
+        labelEn: 'Gjerësia (cm)',
+        labelBoy: 'Gjatësia (cm)',
+        labelKalinlik: 'Trashësia (cm)',
+        labelAdet: 'Sasi',
+        labelRuloBoyu: 'Gjatësia e Ruloit (m)',
+        labelVakum: 'Vakum (%)',
+        labelCap: 'Diametri (cm)',
+        labelPaketAdeti: 'Sasi Pakete',
+        rollpackProductTitle: '📦 Përmasat e Produktit',
+        labelUrunEn: 'Gjerësia (cm)',
+        labelUrunBoy: 'Gjatësia (cm)',
+        labelUrunYukseklik: 'Lartësia (cm)',
+        labelUrunAdet: 'Sasi',
+        resultLabel: 'Vëllimi i Llogaritur',
+        resultHint: 'Vendosni përmasat për të llogaritur',
+        btnAdd: '➕ Shto në Listë',
+        btnUpdate: '✏️ Përditëso',
+        btnCancel: '✖ Anulo',
+        btnShare: '📤 Shpërndaj',
+        btnContainer: '🚛 Kontejner',
+        btnClear: '🗑️ Pastro',
+        listTitle: '📋 Lista e Produkteve',
+        emptyList: 'Nuk është shtuar asnjog produkt',
+        emptyHint: 'Vendosni përmasat dhe shtypni "Shto në Listë"',
+        totalLabel: 'TOTAL',
+        plakaToplam: 'Total Pllakë',
+        ruloToplam: 'Total Rulo',
+        footer: 'Llogaritës M³ Sfungjer © 2026',
+        itemCount: '{n} produkte',
+        summary: '{k} zëra | {a} copë',
+        tipPlaka: 'Sfungjer Pllakë',
+        tipRulo: 'Sfungjer Rulo',
+        tipRollpack: 'Rollpack',
+        adetLabel: 'Sasi',
+        birimLabel: 'Njësi',
+        urunLabel: 'produkt',
+        paketLabel: 'paketë',
+        toastAdded: '✅ Shtuar në listë!',
+        toastUpdated: '✅ Produkti u përditësua!',
+        toastDeleted: '🗑️ U fshi',
+        toastCleared: '🗑️ Lista u pastrua',
+        toastListEmpty: '⚠️ Lista është bosh',
+        toastShared: '✅ U shpërndau!',
+        toastCopied: '📋 U kopjua!',
+        toastCopyFailed: '⚠️ Kopjimi dështoi',
+        toastAddFirst: '⚠️ Fillimisht shtoni produkte në listë',
+        toastEnterDims: '⚠️ Vendosni përmasat e kontejnerit',
+        toastNoItems: '⚠️ Nuk ka produkte në listë',
+        toastCalcError: '❌ Gabim llogaritjeje: ',
+        toastReportError: '❌ Gabim raportimi: ',
+        toastRenderError: '❌ Gabim 3D: ',
+        warnMinEn: '⚠️ Gjerësia duhet të jetë minimumi 5 cm',
+        warnMaxEn: '⚠️ Gjerësia duhet të jetë maksimumi 220 cm',
+        shareTitle: '🧿d LISTA E SFUNGJERIT',
+        shareOlcu: 'Përmasat',
+        shareBirimHacim: 'Vëllimi Njësi',
+        shareToplam: 'Total',
+        shareTotalLine: 'TOTAL: {k} zëra | {a} copë',
+        shareTotalVolume: 'VËLLIMI TOTAL: {v} m³',
+        shareListTitle: '🧿d Lista e Sfungjerit',
+        shareMenuTitle: 'Shpërndaj Listën',
+        confirmTitle: 'Pastro Listën',
+        confirmMsg: 'Të gjithë artikujt do të fshihen. Jeni të sigurt?',
+        confirmCancel: 'Anulo',
+        confirmOk: 'Po, Pastro',
+        containerTitle: '🚛 Simulim i Ngarkimit të Kontejnerit',
+        containerType: 'Lloji i Kontejnerit',
+        containerCustom: 'Me porosi',
+        containerCustomDims: 'Vendos përmasat',
+        containerCalcBtn: '📐 Llogarit & Vizualizoj',
+        containerReportTitle: '📊 Raporti i Ngarkimit',
+        containerLength: 'Gjatësia (cm)',
+        containerWidth: 'Gjerësia (cm)',
+        containerHeight: 'Lartësia (cm)',
+        containerAllFit: '✅ Të gjitha produktet u futën në kontejner!',
+        containerSummary: '{type} · {placed}/{total} produkte · {pct}% plot',
+        containerVol: 'Vëllimi i Kontejnerit',
+        containerCoveredVol: 'Vëllimi i Mbuluar',
+        containerProductVol: 'Vëllimi i Produkteve të Paketuara',
+        containerPlacedItems: 'Paketa të Vendosura',
+        containerRuloPlaka: 'Rulo / Pllakë',
+        containerFillRate: 'Shkalla e Mbushjes',
+        containerEmptySpace: '📦 Hapësira e Lirë në Kontejner',
+        containerEmptyLength: 'Gjatësi e lirë',
+        containerEmptyWidth: 'Gjerësi e lirë',
+        containerEmptyHeight: 'Lartësi e lirë',
+        containerEmptyVol: 'Vëllim i lirë',
+        containerNotFit: '⚠️ <b>{n}</b> produkte nuk u futën ({v} m³)',
+        containerNotFitPcs: 'copë nuk u futën',
+        containerRuloUnit: 'rulo',
+        containerPlakaUnit: 'pllakë',
+        containerDisclaimer: 'ℹ️ Ky është një simulim virtual. Ngarkimi real mund të ndryshojë me ±10%.',
+        vakumCapNormal: 'Diam.: <b>{cap} cm</b>',
+        vakumCapVakumlu: 'Diam.: <b>{cap} cm</b> → Vakum: <b style="color:#c0392b">{vcap} cm</b>',
+        vakumCapDefault: 'Diam. me vakum: —',
+        editTooltip: 'Ndrysho',
+        deleteTooltip: 'Fshi',
+        installGuideTitle: '📲 Shto në Ekranin Kryesor',
+        rollpackDims: '{en} cm × Diam. {cap} cm × {paket} pak.',
+        rollpackM3Label: 'Rollpack M³',
+        urunM3Label: 'Produkti M³',
+        pdfExportBtn: 'Shkarko Raportin PDF',
+        pdfTitle: 'Raporti i Ngarkimit të Kontejnerit',
+        pdfDate: 'Data',
+        pdfProductList: 'Lista e Produkteve',
+        pdfDims: 'Përmasat',
+        pdfQty: 'Sasi',
+        pdfVolume: 'Vëllimi',
+        pdfType: 'Lloji',
+        pdfContainerDims: 'Përmasat e Kontejnerit',
     }
 };
 
