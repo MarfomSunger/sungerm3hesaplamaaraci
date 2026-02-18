@@ -5063,26 +5063,34 @@ function setupLanguageSelector() {
 
     if (!langBtn || !langDropdown) return;
 
-    // Toggle dropdown
-    langBtn.addEventListener('click', function(e) {
+    // Toggle dropdown (click + touch)
+    function toggleDropdown(e) {
         e.stopPropagation();
+        e.preventDefault();
         langDropdown.classList.toggle('show');
-    });
+    }
+    langBtn.addEventListener('click', toggleDropdown);
+    langBtn.addEventListener('touchend', toggleDropdown);
 
-    // Language option click
+    // Language option click (click + touch)
     document.querySelectorAll('.lang-option').forEach(opt => {
-        opt.addEventListener('click', function(e) {
+        function selectLang(e) {
             e.stopPropagation();
-            const lang = this.dataset.lang;
+            e.preventDefault();
+            const lang = opt.dataset.lang;
             applyLanguage(lang);
             langDropdown.classList.remove('show');
-        });
+        }
+        opt.addEventListener('click', selectLang);
+        opt.addEventListener('touchend', selectLang);
     });
 
-    // Close dropdown on outside click
-    document.addEventListener('click', function() {
+    // Close dropdown on outside click/touch
+    function closeDropdown() {
         langDropdown.classList.remove('show');
-    });
+    }
+    document.addEventListener('click', closeDropdown);
+    document.addEventListener('touchend', closeDropdown);
 
     // Load saved language
     const savedLang = localStorage.getItem('sunger_lang');
